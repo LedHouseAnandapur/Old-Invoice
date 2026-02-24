@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LED HOUSE – GST Invoice Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #f0ede8;
+    --panel: #ffffff;
+    --accent: #1a3a5c;
+    --accent2: #c8a84b;
+    --text: #1c1c1c;
+    --muted: #666;
+    --border: #ccc;
+    --input-bg: #fafaf8;
+    --danger: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .app-header {
+    background: var(--accent);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .app-header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; }
+  .app-header span { font-size: 0.75rem; opacity: 0.65; margin-left: 4px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 54px);
+  }
+
+  .input-panel {
+    background: #1a1a1a;
+    color: #e8e4dc;
+    overflow-y: auto;
+    padding: 20px;
+    font-size: 0.82rem;
+  }
+  .input-panel h2 {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #333;
+  }
+  .form-section { margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form-group { margin-bottom: 8px; }
+  .form-group label {
+    display: block;
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #e8e4dc;
+    padding: 6px 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    border-radius: 3px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent2);
+  }
+  .form-group textarea { resize: vertical; min-height: 56px; }
+  .form-group select option { background: #2a2a2a; }
+
+  .items-header {
+    display: grid;
+    grid-template-columns: 28px 1fr 60px 70px 55px 32px;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: #888;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 0;
+  }
+  .item-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 60px 70px 55px 32px;
+    gap: 4px;
+    margin-bottom: 6px;
+    align-items: start;
+  }
+  .item-num {
+    background: #333;
+    color: var(--accent2);
+    border-radius: 2px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    min-height: 30px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .item-row input {
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #e8e4dc;
+    padding: 5px 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    border-radius: 3px;
+    outline: none;
+  }
+  .item-row input:focus { border-color: var(--accent2); }
+  .remove-btn {
+    background: none;
+    border: 1px solid #444;
+    color: #888;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 5px;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+    height: 30px;
+  }
+  .remove-btn:hover { background: #c0392b22; border-color: #c0392b; color: #c0392b; }
+
+  .add-item-btn {
+    background: none;
+    border: 1px dashed #555;
+    color: var(--accent2);
+    padding: 7px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.78rem;
+    border-radius: 3px;
+    margin-top: 4px;
+    transition: all 0.2s;
+  }
+  .add-item-btn:hover { background: #c8a84b15; border-color: var(--accent2); }
+
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #333;
+  }
+  .btn-group { display: flex; gap: 8px; }
+  .btn {
+    padding: 9px 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    flex: 1;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #244d73; }
+  .btn-gold { background: var(--accent2); color: #1a1a1a; }
+  .btn-gold:hover { background: #dbb84f; }
+  .btn-outline { background: none; border: 1px solid #555; color: #ccc; }
+  .btn-outline:hover { background: #333; }
+  .btn-danger { background: none; border: 1px solid #c0392b55; color: #e74c3c; }
+  .btn-danger:hover { background: #c0392b22; }
+  .download-label {
+    font-size: 0.68rem;
+    color: #888;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .preview-area {
+    background: var(--bg);
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-label {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 16px;
+    align-self: flex-start;
+  }
+
+  /* ===== INVOICE DOCUMENT ===== */
+  #invoice-doc {
+    width: 794px;
+    background: white;
+    padding: 28px 32px;
+    font-family: Arial, sans-serif;
+    font-size: 10.5px;
+    color: #111;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    border: 1px solid #ddd;
+  }
+  .inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    margin-bottom: 0;
+  }
+  .inv-table th {
+    border: 0.8px solid #555;
+    padding: 4px 5px;
+    text-align: center;
+    font-weight: bold;
+    background: #f5f5f5;
+    font-size: 9.5px;
+  }
+  .inv-table td {
+    border: 0.8px solid #555;
+    padding: 3px 5px;
+    vertical-align: top;
+  }
+  .item-serial-txt { font-size: 8.5px; color: #555; }
+  .tax-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    margin-top: 6px;
+  }
+  .tax-summary-table th {
+    border: 0.8px solid #555;
+    padding: 3px 5px;
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+  }
+  .tax-summary-table td {
+    border: 0.8px solid #555;
+    padding: 3px 5px;
+    text-align: center;
+  }
+
+  @media print {
+    body { background: white; }
+    .app-header, .input-panel, .preview-label { display: none !important; }
+    .layout { display: block; }
+    .preview-area { padding: 0; }
+    #invoice-doc { box-shadow: none; border: none; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c8a84b" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+  <h1>LED HOUSE <span>GST Invoice Generator</span></h1>
+</div>
+
+<div class="layout">
+  <div class="input-panel">
+
+    <div class="form-section">
+      <h2>📄 Invoice Details</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Invoice No.</label>
+          <input type="text" id="inv_no" value="419">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="inv_date" value="2025-03-30">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ref. No.</label>
+          <input type="text" id="inv_ref" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label>Bill Type</label>
+          <select id="bill_type">
+            <option value="CREDIT">CREDIT</option>
+            <option value="CASH">CASH</option>
+            <option value="CHEQUE">CHEQUE</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>🏢 Company Details</h2>
+      <div class="form-group">
+        <label>Company Name</label>
+        <input type="text" id="company_name" value="LED HOUSE">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea id="company_addr">Anandapur Bridge Chhak, Anandapur, Keonjhar-758021</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mobile</label>
+          <input type="text" id="company_mobile" value="+919124081685">
+        </div>
+        <div class="form-group">
+          <label>State / Code</label>
+          <input type="text" id="company_state" value="Odisha, Code: 21">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>GSTIN/UIN</label>
+          <input type="text" id="company_gstin" value="21EVTPR8050M1ZT">
+        </div>
+        <div class="form-group">
+          <label>PAN</label>
+          <input type="text" id="company_pan" value="EVTPR8050M">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>🏦 Bank Details</h2>
+      <div class="form-group">
+        <label>Bank Name</label>
+        <input type="text" id="bank_name" value="HDFC BANK">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Account No.</label>
+          <input type="text" id="bank_acno" value="5020 0085 544700">
+        </div>
+        <div class="form-group">
+          <label>Branch &amp; IFSC</label>
+          <input type="text" id="bank_ifsc" value="ANANDAPUR & HDFC0003343">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>👤 Customer Details</h2>
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="cust_name" placeholder="Name of purchaser">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea id="cust_addr" placeholder="At- Village, Po- Post Office, Dist- District, PIN-XXXXXX"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>GSTIN/UIN</label>
+          <input type="text" id="cust_gstin" placeholder="If applicable">
+        </div>
+        <div class="form-group">
+          <label>PAN/IT No.</label>
+          <input type="text" id="cust_pan" placeholder="If applicable">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>State Name</label>
+        <input type="text" id="cust_state" placeholder="e.g. Odisha, Code: 21">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>📦 Items</h2>
+      <div class="items-header">
+        <div>#</div>
+        <div>Description / Serial No.</div>
+        <div>Qty</div>
+        <div>Rate (₹)</div>
+        <div>Disc%</div>
+        <div></div>
+      </div>
+      <div id="items-container"></div>
+      <button class="add-item-btn" onclick="addItem()">+ Add Item</button>
+    </div>
+
+    <div class="form-section">
+      <h2>💰 Tax &amp; Other Settings</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>GST Rate (%)</label>
+          <select id="gst_rate">
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18%</option>
+            <option value="28">28%</option>
+            <option value="0">0% (Exempt)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Jurisdiction</label>
+          <input type="text" id="jurisdiction" value="ANANDAPUR JURISDICTION">
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="generateInvoice()">▶ Generate / Refresh Invoice</button>
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="printInvoice()">🖨 Print</button>
+        <button class="btn btn-danger" onclick="resetForm()">↺ Reset</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-gold" onclick="downloadInvoice('normal')">⬇ Normal</button>
+        <button class="btn btn-outline" onclick="downloadInvoice('hd')">⬇ HD</button>
+        <button class="btn btn-outline" onclick="downloadInvoice('uhd')">⬇ UHD</button>
+      </div>
+      <div class="download-label">Normal ≈ 1.5x · HD ≈ 2.5x · UHD ≈ 4.5x resolution</div>
+    </div>
+  </div>
+
+  <div class="preview-area">
+    <div class="preview-label">▸ Live Invoice Preview</div>
+    <div id="invoice-doc"></div>
+  </div>
+</div>
+
+<script>
+let items = [
+  { desc: 'LG 200AH IT2060TT BTY', serial: 'S/R-GA2Y7KVED45213CM', hsn: '', qty: 1, rate: 17200, disc: 0 },
+  { desc: 'LG1150i/12V SW-HUPS', serial: 'S/R-D28RBADVD11217BK0', hsn: '', qty: 1, rate: 5700, disc: 0 },
+  { desc: 'NVY 32" SMART LED TV', serial: '', hsn: '', qty: 1, rate: 9500, disc: 0 },
+  { desc: 'DISH TV 1MONTH FREE', serial: '', hsn: '', qty: 1, rate: 1500, disc: 0 },
+];
+
+function numberToWords(num) {
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function toWords(n) {
+    if (n === 0) return '';
+    if (n < 20) return ones[n] + ' ';
+    if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '') + ' ';
+    if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred ' + toWords(n%100);
+    if (n < 100000) return toWords(Math.floor(n/1000)) + 'Thousand ' + toWords(n%1000);
+    if (n < 10000000) return toWords(Math.floor(n/100000)) + 'Lakh ' + toWords(n%100000);
+    return toWords(Math.floor(n/10000000)) + 'Crore ' + toWords(n%10000000);
+  }
+  const intPart = Math.floor(num);
+  const decPart = Math.round((num - intPart) * 100);
+  let result = 'INR ' + toWords(intPart).trim();
+  if (decPart > 0) result += ' and ' + toWords(decPart).trim() + ' Paisa';
+  return result + ' Only';
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  return `${d}-${m}-${y}`;
+}
+
+function fmtNum(n) {
+  return parseFloat(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function val(id) { return document.getElementById(id).value.trim(); }
+
+function renderItemInputs() {
+  const c = document.getElementById('items-container');
+  c.innerHTML = '';
+  items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <div class="item-num">${i+1}</div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <input type="text" placeholder="Item Description" value="${(item.desc||'').replace(/"/g,'&quot;')}" oninput="items[${i}].desc=this.value;generateInvoice()">
+        <input type="text" placeholder="Serial No. / HSN (optional)" value="${(item.serial||'').replace(/"/g,'&quot;')}" style="font-size:0.68rem;color:#aaa" oninput="items[${i}].serial=this.value;generateInvoice()">
+      </div>
+      <div><input type="number" value="${item.qty}" min="1" oninput="items[${i}].qty=parseFloat(this.value)||1;generateInvoice()" style="text-align:center"></div>
+      <div><input type="number" value="${item.rate}" min="0" oninput="items[${i}].rate=parseFloat(this.value)||0;generateInvoice()" style="text-align:right"></div>
+      <div><input type="number" value="${item.disc}" min="0" max="100" oninput="items[${i}].disc=parseFloat(this.value)||0;generateInvoice()" style="text-align:right"></div>
+      <button class="remove-btn" onclick="removeItem(${i})">✕</button>
+    `;
+    c.appendChild(row);
+  });
+}
+
+function addItem() {
+  items.push({ desc: '', serial: '', hsn: '', qty: 1, rate: 0, disc: 0 });
+  renderItemInputs();
+  generateInvoice();
+}
+
+function removeItem(i) {
+  if (items.length === 1) { alert('At least one item required.'); return; }
+  items.splice(i, 1);
+  renderItemInputs();
+  generateInvoice();
+}
+
+function generateInvoice() {
+  const gstRate = parseFloat(val('gst_rate')) || 18;
+  const sgstRate = gstRate / 2;
+  const cgstRate = gstRate / 2;
+
+  let itemRowsHTML = '';
+  let subtotalTaxable = 0;
+
+  items.forEach((item, i) => {
+    const grossAmt = item.qty * item.rate;
+    const discAmt = grossAmt * (item.disc / 100);
+    const taxableAmt = grossAmt - discAmt;
+    const valueOfGoods = taxableAmt / (1 + gstRate / 100);
+    subtotalTaxable += valueOfGoods;
+
+    itemRowsHTML += `
+      <tr>
+        <td style="text-align:center;width:22px">${i+1}</td>
+        <td style="min-width:160px">
+          <b>${item.desc || ''}</b>
+          ${item.serial ? `<div class="item-serial-txt">${item.serial}</div>` : ''}
+        </td>
+        <td style="text-align:center">${item.hsn || ''}</td>
+        <td style="text-align:center">${item.qty}</td>
+        <td style="text-align:right">${fmtNum(item.rate)}</td>
+        <td style="text-align:right">${fmtNum(valueOfGoods)}</td>
+        <td style="text-align:center">PCS</td>
+        <td style="text-align:right">${item.disc > 0 ? item.disc + '%' : ''}</td>
+        <td style="text-align:right">${fmtNum(valueOfGoods)}</td>
+      </tr>
+    `;
+  });
+
+  const sgstAmt = subtotalTaxable * sgstRate / 100;
+  const cgstAmt = subtotalTaxable * cgstRate / 100;
+  const totalBeforeRound = subtotalTaxable + sgstAmt + cgstAmt;
+  const rounded = Math.round(totalBeforeRound);
+  const roundOff = parseFloat((rounded - totalBeforeRound).toFixed(2));
+  const taxTotal = sgstAmt + cgstAmt;
+
+  const custAddrFormatted = val('cust_addr').split('\n').join(', ');
+
+  document.getElementById('invoice-doc').innerHTML = `
+    <div style="text-align:center;font-size:9px;text-decoration:underline;margin-bottom:4px;font-weight:bold">
+      SUBJECT TO ${val('jurisdiction')}
+    </div>
+
+    <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px">
+      <div><b>Invoice No. :${val('inv_no')}</b><br>Ref. No. &nbsp;&nbsp; : ${val('inv_ref')}</div>
+      <div style="text-align:right"><b>Date :</b> &nbsp; ${fmtDate(val('inv_date'))}</div>
+    </div>
+
+    <div style="text-align:center;font-size:22px;font-weight:900;letter-spacing:2px;margin:4px 0 2px;font-family:Arial Black,Arial,sans-serif">
+      ${val('company_name')}
+    </div>
+    <div style="text-align:center;font-size:9.5px;color:#444;margin-bottom:2px">
+      ${val('company_addr')} | Mob: ${val('company_mobile')}
+    </div>
+    <hr style="border:none;border-top:1.5px solid #111;margin:4px 0">
+
+    <div style="text-align:center;font-size:11px;font-weight:bold;text-decoration:underline;margin:6px 0 8px">
+      Tax Invoice
+    </div>
+
+    <table style="width:100%;font-size:10px;margin-bottom:8px;border-collapse:collapse">
+      <tr>
+        <td style="width:45%;vertical-align:top;padding-right:12px">
+          <b>Name of the Purchaser :</b><br>
+          ${val('cust_name')}<br>
+          ${custAddrFormatted}
+        </td>
+        <td style="width:55%;vertical-align:top">
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="white-space:nowrap;font-weight:bold;padding:1px 4px 1px 0;vertical-align:top">GSTIN/UIN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :</td><td>${val('cust_gstin')}</td></tr>
+            <tr><td style="white-space:nowrap;font-weight:bold;padding:1px 4px 1px 0;vertical-align:top">PAN/IT No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :</td><td>${val('cust_pan')}</td></tr>
+            <tr><td style="white-space:nowrap;font-weight:bold;padding:1px 4px 1px 0;vertical-align:top">State Name &nbsp;&nbsp;&nbsp;&nbsp; :</td><td>${val('cust_state')}</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th style="width:22px">Sl #</th>
+          <th>Description of Goods</th>
+          <th>HSN/SAC</th>
+          <th>Quantity</th>
+          <th>Rate</th>
+          <th>Value of Goods</th>
+          <th>Per</th>
+          <th>Disc %</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemRowsHTML}
+        <tr>
+          <td colspan="8" style="text-align:right;font-weight:bold;padding:3px 5px">Output SGST</td>
+          <td style="text-align:right;border:0.8px solid #555;padding:3px 5px">${fmtNum(sgstAmt)}</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="padding:3px 5px;text-align:right;color:#888;font-size:9px">Subtotal (excl. tax)</td>
+          <td style="text-align:right;border:0.8px solid #555;padding:3px 5px">${fmtNum(subtotalTaxable)}</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align:right;font-weight:bold;padding:3px 5px">Output CGST</td>
+          <td style="text-align:right;border:0.8px solid #555;padding:3px 5px">${fmtNum(cgstAmt)}</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align:right;font-weight:bold;padding:3px 5px">ROUND OFF</td>
+          <td style="text-align:right;border:0.8px solid #555;padding:3px 5px">${roundOff !== 0 ? (roundOff > 0 ? '+' : '') + roundOff.toFixed(2) : ''}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="border:0.8px solid #555;padding:3px 5px;font-weight:bold;vertical-align:top">
+            Bill Details:<br><span style="font-weight:normal">${val('bill_type')}</span>
+          </td>
+          <td colspan="5" style="border:0.8px solid #555;padding:3px 5px"></td>
+          <td style="border:0.8px solid #555;padding:3px 5px"></td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align:right;font-weight:bold;padding:3px 5px;border-top:1.5px solid #333;border:0.8px solid #555">Total</td>
+          <td style="text-align:right;font-weight:bold;border:0.8px solid #555;border-top:1.5px solid #333;padding:3px 5px">${fmtNum(rounded)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="font-size:9.5px;padding:3px 5px;border:0.8px solid #555;border-top:none;margin-bottom:4px">
+      <b>Amount Chargeable (in words)</b><br>
+      <i><b>${numberToWords(rounded)}</b></i>
+    </div>
+
+    <table class="tax-summary-table">
+      <thead>
+        <tr>
+          <th rowspan="2">HSN/SAC</th>
+          <th rowspan="2">Taxable Value</th>
+          <th colspan="2">Central Tax</th>
+          <th colspan="2">State Tax</th>
+          <th rowspan="2">Total Tax Amount</th>
+        </tr>
+        <tr>
+          <th>Rate</th><th>Amount</th>
+          <th>Rate</th><th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          <td style="text-align:right">${fmtNum(subtotalTaxable)}</td>
+          <td>${cgstRate}%</td>
+          <td style="text-align:right">${fmtNum(cgstAmt)}</td>
+          <td>${sgstRate}%</td>
+          <td style="text-align:right">${fmtNum(sgstAmt)}</td>
+          <td style="text-align:right">${fmtNum(taxTotal)}</td>
+        </tr>
+        <tr>
+          <td style="font-weight:bold">Total</td>
+          <td style="text-align:right;font-weight:bold">${fmtNum(subtotalTaxable)}</td>
+          <td></td>
+          <td style="text-align:right;font-weight:bold">${fmtNum(cgstAmt)}</td>
+          <td></td>
+          <td style="text-align:right;font-weight:bold">${fmtNum(sgstAmt)}</td>
+          <td style="text-align:right;font-weight:bold">${fmtNum(taxTotal)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="font-size:8.5px;padding:3px 5px;border:0.8px solid #555;border-top:none;margin-bottom:8px">
+      Tax Amount (in words): <i>${numberToWords(taxTotal)}</i>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:9.5px">
+      <div>
+        <b>Company's GSTIN/UIN : ${val('company_gstin')}</b><br>
+        <b>Company's PAN : ${val('company_pan')}</b><br><br>
+        <u><b>Company's Bank Details</b></u><br>
+        Bank Name &nbsp;&nbsp;&nbsp;&nbsp; : &nbsp;<b>${val('bank_name')}</b><br>
+        A/c No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : &nbsp;<b>${val('bank_acno')}</b><br>
+        Branch &amp; IFSC : &nbsp;<b>${val('bank_ifsc')}</b>
+      </div>
+      <div style="text-align:right">
+        <b>for ${val('company_name')}</b>
+        <div style="margin-top:40px;font-size:8.5px;color:#555">Authorised Signatory</div>
+      </div>
+    </div>
+
+    <div style="font-size:8.5px;color:#444;margin-top:8px">
+      <u>Declaration</u><br>
+      We declare that invoice shows the actual price of the goods described and that all particulars are true and correct.
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:9.5px;font-weight:bold">
+      <span>Prepared by</span>
+      <span>Verified by</span>
+      <span>Authorised by</span>
+    </div>
+
+    <div style="text-align:center;font-size:8.5px;text-decoration:underline;margin-top:10px;color:#333">
+      This is a Computer Generated Invoice
+    </div>
+  `;
+}
+
+function printInvoice() {
+  window.print();
+}
+
+function resetForm() {
+  if (!confirm('Reset customer details and items?')) return;
+  ['cust_name','cust_addr','cust_gstin','cust_pan','cust_state','inv_ref'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('inv_no').value = '';
+  document.getElementById('inv_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('bill_type').value = 'CREDIT';
+  items = [{ desc: '', serial: '', hsn: '', qty: 1, rate: 0, disc: 0 }];
+  renderItemInputs();
+  generateInvoice();
+}
+
+async function downloadInvoice(quality) {
+  const scaleMap = { normal: 1.5, hd: 2.5, uhd: 4.5 };
+  const scale = scaleMap[quality] || 1.5;
+  const el = document.getElementById('invoice-doc');
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Generating...';
+  btn.disabled = true;
+  try {
+    const canvas = await html2canvas(el, {
+      scale: scale,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+    const link = document.createElement('a');
+    const invNo = val('inv_no') || 'draft';
+    link.download = `LED_HOUSE_Invoice_${invNo}_${quality.toUpperCase()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('Download failed: ' + e.message);
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// Live refresh on all inputs
+document.addEventListener('input', (e) => {
+  if (e.target.closest('.input-panel') && !e.target.closest('#items-container')) {
+    generateInvoice();
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.closest('.input-panel') && !e.target.closest('#items-container')) {
+    generateInvoice();
+  }
+});
+
+renderItemInputs();
+generateInvoice();
+</script>
+</body>
+</html>
