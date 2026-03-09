@@ -287,65 +287,44 @@ body{background:#e2e8f0;font-family:var(--font);min-height:100vh;padding:16px}
 <div class="fp">
   <div class="fp-title">📋 Invoice Details</div>
 
-  <!-- ═══════════════════════════════════════════
-       GOOGLE FORM INTEGRATION CONFIG
-       ─────────────────────────────────────────
-       HOW TO SET UP:
-       1. Create a Google Form with the fields listed below
-       2. Open the form → click ⋮ → "Get pre-filled link"
-       3. Fill ONE dummy value in each field, click "Get Link"
-       4. Copy the URL — it contains entry.XXXXXXXXX for each field
-       5. Paste your Form's base URL and each entry ID below
-       ═══════════════════════════════════════════ -->
   <div class="gf-config">
     <div class="gf-config-title">🔗 Google Sheets Integration</div>
+    <div style="font-size:.7rem;color:#5b21b6;margin-bottom:8px">
+      Paste your <strong>pre-filled form URL</strong> below — entry IDs are extracted automatically.
+    </div>
     <div class="f">
-      <label>Google Form Submit URL</label>
-      <!-- ▼▼▼ LINE TO REPLACE — paste your Form action URL here ▼▼▼ -->
-      <input id="gf_url" value="https://docs.google.com/forms/d/e/1FAIpQLSdMEPzKGvlUKeO_0O2wdZd03FYEuan_81i4tvLVie7O5WVmkw/formResponse" oninput="checkGFConfig()"/>
-      <!-- ▲▲▲ REPLACE THE PLACEHOLDER WITH YOUR ACTUAL FORM URL ▲▲▲ -->
+      <label>Paste Pre-Filled Form URL (with entry IDs)</label>
+      <textarea id="prefill_url" rows="3" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.111=test&entry.222=test&entry.333=test..." style="font-size:.7rem;border-color:#c4b5fd" oninput="autoExtractOnPaste()"></textarea>
     </div>
-    <span class="gf-toggle" onclick="toggleGFFields()">▶ Show / hide entry field IDs</span>
+    <div style="background:#faf5ff;border:1px solid #c4b5fd;border-radius:6px;padding:7px;font-size:.67rem;color:#5b21b6;margin-bottom:8px">
+      <strong>How to get this URL (one time only):</strong><br/>
+      1. Open your Google Form &rarr; click the <strong>3-dot menu (⋮)</strong><br/>
+      2. Click <strong>"Get pre-filled link"</strong><br/>
+      3. Type <strong>any text</strong> in every single field (all 14)<br/>
+      4. Click <strong>"Get Link"</strong> &rarr; copy the full URL &rarr; paste above
+    </div>
+    <button class="btn btn-purple" style="width:100%;margin-bottom:6px" onclick="extractAndSave()">🔍 Extract IDs &amp; Activate</button>
+    <div id="extractMsg" style="font-size:.68rem;margin-bottom:6px;display:none;padding:6px 8px;border-radius:5px"></div>
+    <div class="gf-status disconnected" id="gfStatus">Not activated — paste URL above and click Extract</div>
+    <span class="gf-toggle" onclick="toggleGFFields()" style="margin-top:4px;display:block">▶ Show detected entry IDs</span>
     <div class="gf-fields" id="gfFields">
-
-      <!-- HOW TO GET ENTRY IDs -->
-      <div style="background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:7px;padding:8px;margin-bottom:8px;font-size:.68rem;color:#5b21b6">
-        <strong>📌 How to get your entry IDs (one-time setup):</strong><br/>
-        1. Open your Google Form as the <strong>editor</strong> (not viewer)<br/>
-        2. Click the <strong>⋮ menu → "Get pre-filled link"</strong><br/>
-        3. Type any dummy text (e.g. "test") in <strong>each field</strong><br/>
-        4. Click <strong>"Get Link"</strong> → copy the URL<br/>
-        5. Paste that URL in the box below and click <strong>🔍 Extract IDs</strong>
-      </div>
-
-      <div class="f">
-        <label>Paste pre-filled link here to auto-extract entry IDs</label>
-        <div style="display:flex;gap:6px">
-          <input id="prefill_url" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.123=test..." style="flex:1"/>
-          <button class="btn btn-purple" style="padding:6px 10px;font-size:.72rem;white-space:nowrap" onclick="extractEntryIds()">🔍 Extract IDs</button>
-        </div>
-      </div>
-      <div id="extractMsg" style="font-size:.68rem;margin-bottom:6px;display:none"></div>
-
-      <div class="row2">
-        <div class="f"><label>① Invoice No</label><input id="gfe_inv_no" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>② Invoice Date</label><input id="gfe_inv_date" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>③ Buyer Name</label><input id="gfe_b_name" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
+      <div class="row2" style="margin-top:6px">
+        <div class="f"><label>① Invoice No</label><input id="gfe_inv_no" placeholder="entry.XXXXXXXXX" value="entry.711848445" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>② Invoice Date</label><input id="gfe_inv_date" placeholder="entry.XXXXXXXXX" value="entry.1141355359" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>③ Buyer Name</label><input id="gfe_b_name" placeholder="entry.XXXXXXXXX" value="entry.1518693747" oninput="checkGFConfig()"/></div>
         <div class="f"><label>④ Buyer GSTIN</label><input id="gfe_b_gstin" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑤ Buyer Phone</label><input id="gfe_b_phone" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑥ Buyer Address</label><input id="gfe_b_addr" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑦ Invoice Description</label><input id="gfe_inv_desc" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑧ Items (JSON)</label><input id="gfe_items" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑨ Taxable Amount</label><input id="gfe_taxable" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑩ Total GST</label><input id="gfe_gst" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑪ Grand Total</label><input id="gfe_grand" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑤ Buyer Phone</label><input id="gfe_b_phone" placeholder="entry.XXXXXXXXX" value="entry.1979914834" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑥ Buyer Address</label><input id="gfe_b_addr" placeholder="entry.XXXXXXXXX" value="entry.245762926" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑦ Invoice Desc</label><input id="gfe_inv_desc" placeholder="entry.XXXXXXXXX" value="entry.2070361448" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑧ Items</label><input id="gfe_items" placeholder="entry.XXXXXXXXX" value="entry.1687791023" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑨ Taxable Amt</label><input id="gfe_taxable" placeholder="entry.XXXXXXXXX" value="entry.2088664193" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑩ Total GST</label><input id="gfe_gst" placeholder="entry.XXXXXXXXX" value="entry.482730463" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑪ Grand Total</label><input id="gfe_grand" placeholder="entry.XXXXXXXXX" value="entry.160476307" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑫ Ship To Name</label><input id="gfe_sh_name" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑬ Ship Address</label><input id="gfe_sh_addr" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑭ Notes</label><input id="gfe_notes" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑬ Ship Address</label><input id="gfe_sh_addr" placeholder="entry.XXXXXXXXX" value="entry.1791464602" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑭ Notes</label><input id="gfe_notes" placeholder="entry.XXXXXXXXX" value="entry.1206998346" oninput="checkGFConfig()"/></div>
       </div>
-      <button class="btn btn-purple" style="width:100%;margin-top:4px;font-size:.75rem" onclick="saveEntryIds()">💾 Save Entry IDs (remembers in browser)</button>
     </div>
-    <div class="gf-status disconnected" id="gfStatus">⚠ Not configured — add Form URL above to enable saving</div>
   </div>
 
   <!-- Logo -->
@@ -555,95 +534,170 @@ function buildWM(name){
 // ════════════════════════════════════════════
 
 // ─── ENTRY ID FIELD ORDER (matches form field order ①–⑭) ───
+// ════════════════════════════════════════════
+//  GOOGLE FORM INTEGRATION — clean rewrite
+// ════════════════════════════════════════════
+
+// Field order must match your Google Form field order top-to-bottom
 const GF_FIELD_IDS = [
-  'gfe_inv_no','gfe_inv_date','gfe_b_name','gfe_b_gstin','gfe_b_phone',
+  'gfe_inv_no','gfe_inv_date','gfe_b_name','gfe_b_phone',
   'gfe_b_addr','gfe_inv_desc','gfe_items','gfe_taxable','gfe_gst',
-  'gfe_grand','gfe_sh_name','gfe_sh_addr','gfe_notes'
+  'gfe_grand','gfe_sh_addr','gfe_notes'
 ];
 
-// Auto-extract entry IDs from a pre-filled URL
-function extractEntryIds(){
-  const raw = document.getElementById('prefill_url').value.trim();
-  const msg = document.getElementById('extractMsg');
+// Hardcoded form URL — already known
+const GF_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdMEPzKGvlUKeO_0O2wdZd03FYEuan_81i4tvLVie7O5WVmkw/formResponse';
+
+// Auto-trigger extraction when user pastes into the textarea
+function autoExtractOnPaste(){
+  var raw = (document.getElementById('prefill_url').value || '').trim();
+  if(raw.includes('entry.') && raw.includes('viewform')){
+    extractAndSave();
+  }
+}
+
+// Extract entry IDs from pre-filled URL and save immediately
+function extractAndSave(){
+  var raw = (document.getElementById('prefill_url').value || '').trim();
+  var msg = document.getElementById('extractMsg');
   msg.style.display = 'block';
-  if(!raw){ msg.style.color='#dc2626'; msg.textContent='⚠ Please paste a pre-filled URL first.'; return; }
-  const matches = [...raw.matchAll(/entry\.(\d+)=/g)].map(m => 'entry.'+m[1]);
-  if(!matches.length){ msg.style.color='#dc2626'; msg.textContent='⚠ No entry IDs found — make sure you used "Get pre-filled link" and filled every field.'; return; }
-  matches.forEach((id, i) => {
-    const el = document.getElementById(GF_FIELD_IDS[i]);
+
+  if(!raw){
+    msg.style.background = '#fef2f2'; msg.style.color = '#dc2626';
+    msg.textContent = 'Please paste your pre-filled form URL first.';
+    return;
+  }
+  if(!raw.includes('entry.')){
+    msg.style.background = '#fef2f2'; msg.style.color = '#dc2626';
+    msg.textContent = 'No entry IDs found in URL. Make sure you used "Get pre-filled link" and filled all fields.';
+    return;
+  }
+
+  // Extract ALL entry.XXXXXXXX= patterns (handles both = and %3D encoded)
+  var decoded = raw.replace(/%3D/gi,'=').replace(/%26/gi,'&');
+  var matches = [];
+  var re = /entry\.(\d+)=/g;
+  var m;
+  while((m = re.exec(decoded)) !== null){
+    matches.push('entry.' + m[1]);
+  }
+
+  // Deduplicate while preserving order
+  var seen = {};
+  var unique = matches.filter(function(id){
+    if(seen[id]) return false;
+    seen[id] = true;
+    return true;
+  });
+
+  if(unique.length === 0){
+    msg.style.background = '#fef2f2'; msg.style.color = '#dc2626';
+    msg.textContent = 'Could not extract entry IDs. Try copying the full URL again.';
+    return;
+  }
+
+  // Fill the entry ID inputs in order
+  unique.forEach(function(id, i){
+    var el = document.getElementById(GF_FIELD_IDS[i]);
     if(el) el.value = id;
   });
-  msg.style.color='#16a34a';
-  msg.textContent = `✅ Found ${matches.length} entry ID${matches.length>1?'s':''} — check and save below!`;
+
+  // Persist to localStorage
+  saveEntryIds();
+
+  msg.style.background = '#dcfce7'; msg.style.color = '#15803d';
+  msg.textContent = 'Found ' + unique.length + '/12 entry IDs and saved. Ready to submit!';
+
+  if(unique.length < 14){
+    msg.style.background = '#fef9c3'; msg.style.color = '#854d0e';
+    msg.textContent = 'Found ' + unique.length + '/12 entry IDs. Ready!';
+  }
+
   checkGFConfig();
 }
 
-// Save entry IDs to localStorage so they persist across page reloads
+// Save entry IDs to localStorage
 function saveEntryIds(){
-  const data = {};
-  GF_FIELD_IDS.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
-  data['gf_url'] = document.getElementById('gf_url')?.value || '';
-  localStorage.setItem('gf_entry_ids', JSON.stringify(data));
-  const msg = document.getElementById('extractMsg');
-  msg.style.display='block'; msg.style.color='#7c3aed';
-  msg.textContent = '💾 Entry IDs saved! They will load automatically next time.';
+  var data = { gf_url: GF_FORM_URL };
+  GF_FIELD_IDS.forEach(function(id){
+    data[id] = (document.getElementById(id) || {}).value || '';
+  });
+  try { localStorage.setItem('gf_entry_ids', JSON.stringify(data)); } catch(e){}
 }
 
-// Load saved entry IDs on page start
+// Hardcoded entry IDs — extracted from your pre-filled URL
+var HARDCODED_ENTRY_IDS = {
+  'gfe_inv_no':   'entry.711848445',
+  'gfe_inv_date': 'entry.1141355359',
+  'gfe_b_name':   'entry.1518693747',
+  'gfe_b_phone':  'entry.1979914834',
+  'gfe_b_addr':   'entry.245762926',
+  'gfe_inv_desc': 'entry.2070361448',
+  'gfe_items':    'entry.1687791023',
+  'gfe_taxable':  'entry.2088664193',
+  'gfe_gst':      'entry.482730463',
+  'gfe_grand':    'entry.160476307',
+  'gfe_sh_addr':  'entry.1791464602',
+  'gfe_notes':    'entry.1206998346'
+};
+
+// Load entry IDs — hardcoded values are always the fallback
 function loadEntryIds(){
+  // First apply hardcoded defaults
+  Object.keys(HARDCODED_ENTRY_IDS).forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = HARDCODED_ENTRY_IDS[id];
+  });
+  // Then override with any localStorage-saved values (from manual extraction)
   try {
-    const saved = localStorage.getItem('gf_entry_ids');
-    if(!saved) return;
-    const data = JSON.parse(saved);
-    GF_FIELD_IDS.forEach(id => {
-      const el = document.getElementById(id);
-      if(el && data[id]) el.value = data[id];
-    });
-    // Don't overwrite the hardcoded URL — only load if field is empty
-    const urlEl = document.getElementById('gf_url');
-    if(urlEl && !urlEl.value && data['gf_url']) urlEl.value = data['gf_url'];
-    checkGFConfig();
-  } catch(e){ /* ignore */ }
+    var saved = localStorage.getItem('gf_entry_ids');
+    if(saved){
+      var data = JSON.parse(saved);
+      GF_FIELD_IDS.forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && data[id] && data[id].startsWith('entry.')) el.value = data[id];
+      });
+    }
+  } catch(e){}
+  checkGFConfig();
 }
 
 function checkGFConfig(){
-  const url = V('gf_url');
-  const status = document.getElementById('gfStatus');
-  // Need at minimum the URL and invoice no entry
-  if(url && url.includes('docs.google.com/forms') && V('gfe_inv_no')){
-    status.className='gf-status connected';
-    status.textContent='✅ Configured — Save & Download will record to Google Sheets';
-  } else if(url && !url.includes('docs.google.com/forms')){
-    status.className='gf-status disconnected';
-    status.textContent='⚠ URL looks wrong — should start with https://docs.google.com/forms/...';
+  var status = document.getElementById('gfStatus');
+  var configured = GF_FIELD_IDS.filter(function(id){
+    var el = document.getElementById(id);
+    return el && (el.value || '').trim().startsWith('entry.');
+  });
+  if(configured.length >= 12){
+    status.className = 'gf-status connected';
+    status.textContent = 'Ready — all 12 entry IDs loaded. Save & Download will record to Sheets.';
+  } else if(configured.length > 0){
+    status.className = 'gf-status disconnected';
+    status.textContent = 'Partial: only ' + configured.length + '/12 IDs set.';
   } else {
-    status.className='gf-status disconnected';
-    status.textContent='⚠ Not configured — add Form URL above to enable saving';
+    status.className = 'gf-status disconnected';
+    status.textContent = 'Not activated — paste your pre-filled URL above and click Extract.';
   }
 }
 
 function toggleGFFields(){
-  const f=document.getElementById('gfFields');
+  var f = document.getElementById('gfFields');
   f.classList.toggle('open');
   document.querySelector('.gf-toggle').textContent =
-    f.classList.contains('open') ? '▼ Hide entry field IDs' : '▶ Show / hide entry field IDs';
+    f.classList.contains('open') ? 'Hide detected entry IDs' : 'Show detected entry IDs';
 }
 
-// Submits data silently to Google Form using a hidden iframe (no page redirect)
+// Submit data to Google Form via hidden iframe
 async function submitToGoogleForm(items, sub, totalGST, grand){
-  const formUrl = V('gf_url');
-  if(!formUrl || !formUrl.includes('docs.google.com/forms')) return false;
+  var itemsSummary = items.map(function(i){
+    return i.name + ' x' + i.qty + ' @Rs.' + i.rate.toFixed(0) + ' +' + i.gst + '%GST =Rs.' + i.total.toFixed(0);
+  }).join(' | ');
 
-  const itemsSummary = items.map(i =>
-    i.name + ' (x' + i.qty + ') @ Rs.' + i.rate.toFixed(0) + ' + ' + i.gst + '% GST = Rs.' + i.total.toFixed(0)
-  ).join(' | ');
-
-  // Array of pairs so entry IDs are read at submit time — NOT used as object keys
-  const pairs = [
+  // Build value map — 12 fields matching your Google Form exactly
+  var pairs = [
     { el:'gfe_inv_no',   val: V('inv_no') },
     { el:'gfe_inv_date', val: V('inv_date') },
     { el:'gfe_b_name',   val: V('b_name') },
-    { el:'gfe_b_gstin',  val: V('b_gstin') },
     { el:'gfe_b_phone',  val: V('b_phone') },
     { el:'gfe_b_addr',   val: V('b_addr') },
     { el:'gfe_inv_desc', val: V('inv_desc') },
@@ -651,26 +705,25 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
     { el:'gfe_taxable',  val: sub.toFixed(2) },
     { el:'gfe_gst',      val: totalGST.toFixed(2) },
     { el:'gfe_grand',    val: String(Math.round(grand)) },
-    { el:'gfe_sh_name',  val: V('sh_name') || V('b_name') },
     { el:'gfe_sh_addr',  val: V('sh_addr') || V('b_addr') },
     { el:'gfe_notes',    val: V('notes') },
   ];
 
-  // Count how many entry IDs are actually configured
-  const configured = pairs.filter(p => {
-    const id = (document.getElementById(p.el) || {}).value || '';
-    return id.trim().startsWith('entry.');
+  // Count configured entry IDs
+  var configured = pairs.filter(function(p){
+    var el = document.getElementById(p.el);
+    return el && (el.value || '').trim().startsWith('entry.');
   });
 
-  console.log('[GForm] Configured entry IDs: ' + configured.length + '/14');
+  console.log('[GForm] Submitting ' + configured.length + '/12 fields');
 
   if(configured.length === 0){
     return 'no_entry_ids';
   }
 
-  return new Promise((resolve) => {
+  return new Promise(function(resolve){
     try {
-      let iframe = document.getElementById('gf_iframe');
+      var iframe = document.getElementById('gf_iframe');
       if(!iframe){
         iframe = document.createElement('iframe');
         iframe.id = 'gf_iframe';
@@ -679,39 +732,38 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
         document.body.appendChild(iframe);
       }
 
-      const form = document.createElement('form');
+      var form = document.createElement('form');
       form.method = 'POST';
-      form.action = formUrl;
+      form.action = GF_FORM_URL;
       form.target = 'gf_iframe';
       form.style.display = 'none';
 
       pairs.forEach(function(p){
-        const entryId = ((document.getElementById(p.el) || {}).value || '').trim();
+        var entryId = ((document.getElementById(p.el) || {}).value || '').trim();
         if(!entryId.startsWith('entry.')) return;
-        const input = document.createElement('input');
+        var input = document.createElement('input');
         input.type = 'hidden';
         input.name = entryId;
         input.value = p.val;
         form.appendChild(input);
-        console.log('  [GForm] ' + entryId + ' = "' + String(p.val).substring(0,50) + '"');
+        console.log('  ' + entryId + ' = "' + String(p.val).substring(0,40) + '"');
       });
 
       document.body.appendChild(form);
       form.submit();
       document.body.removeChild(form);
 
-      setTimeout(function(){ resolve(true); }, 1200);
+      setTimeout(function(){ resolve(true); }, 1500);
     } catch(e){
-      console.warn('Google Form submit error:', e);
+      console.warn('GForm submit error:', e);
       resolve(false);
     }
   });
 }
 
 function showSaveModal(success, msg){
-  document.getElementById('modalIcon').textContent = success ? '✅' : '⚠';
+  document.getElementById('modalIcon').textContent = success ? '' : '';
   document.getElementById('modalTitle').textContent = success ? 'Saved to Google Sheets!' : 'Not Saved';
-  // Render newlines as <br> for readability
   document.getElementById('modalMsg').innerHTML = msg.replace(/\n/g, '<br/>');
   document.getElementById('saveModal').classList.add('show');
   document.getElementById('modalOverlay').classList.add('show');
@@ -721,49 +773,37 @@ function closeSaveModal(){
   document.getElementById('modalOverlay').classList.remove('show');
 }
 
-// Combined: save to form + download PDF
-async function saveAndDownload(quality='normal'){
+async function saveAndDownload(quality){
+  quality = quality || 'normal';
   generate();
-  await new Promise(r=>setTimeout(r,300));
+  await new Promise(function(r){ setTimeout(r, 300); });
 
-  const cur=V('currency')||'₹';
-  const items=getItems();
-  let sub=0,totalGST=0;
-  items.forEach(i=>{ sub+=i.taxable; totalGST+=i.gstAmt; });
-  const grand=sub+totalGST;
+  var items = getItems();
+  var sub = 0, totalGST = 0;
+  items.forEach(function(i){ sub += i.taxable; totalGST += i.gstAmt; });
+  var grand = sub + totalGST;
 
-  const formUrl = V('gf_url');
-  if(!formUrl || !formUrl.includes('docs.google.com/forms')){
-    // No form configured — just download
-    await downloadPDF(quality);
-    showSaveModal(false,'Google Form not configured. PDF downloaded only.\n\nAdd your Form URL in the integration panel above to enable saving.');
-    return;
-  }
-
-  showToast('💾 Saving to Google Sheets…');
-  const result = await submitToGoogleForm(items, sub, totalGST, grand);
+  showToast('Saving to Google Sheets...');
+  var result = await submitToGoogleForm(items, sub, totalGST, grand);
   hideToast();
 
-  // Download PDF regardless of save result
   await downloadPDF(quality);
 
   if(result === 'no_entry_ids'){
     showSaveModal(false,
-      'Entry IDs not set up yet!\n\n' +
-      'Your data was NOT saved. Here is how to fix it:\n\n' +
-      '1. Open your Google Form as editor\n' +
-      '2. Click the 3-dot menu then Get pre-filled link\n' +
-      '3. Type "test" in every field then click Get Link\n' +
-      '4. Copy the URL and paste it in the Show/hide entry field IDs panel\n' +
-      '5. Click Extract IDs then Save Entry IDs\n\n' +
-      'PDF was downloaded successfully.'
+      'Entry IDs not set up!\n\n' +
+      'Go to your Google Form editor, click the 3-dot menu,\n' +
+      'choose "Get pre-filled link", fill every field, click\n' +
+      '"Get Link", copy that URL, and paste it in the\n' +
+      'integration panel at the top of this form.\n\n' +
+      'PDF was downloaded anyway.'
     );
   } else {
     showSaveModal(
       result === true,
       result === true
-        ? 'Invoice ' + (V('inv_no')||'#') + ' for ' + (V('b_name')||'buyer') + ' saved to Google Sheets.\nPDF downloaded successfully.'
-        : 'Could not confirm save. Check your Form URL and entry IDs.\nPDF downloaded anyway.'
+        ? 'Invoice ' + (V('inv_no') || '#') + ' saved to Google Sheets.\nPDF downloaded successfully.'
+        : 'Could not confirm save. Check browser console for details.\nPDF downloaded anyway.'
     );
   }
 }
