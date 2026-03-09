@@ -312,7 +312,7 @@ body{background:#e2e8f0;font-family:var(--font);min-height:100vh;padding:16px}
         <div class="f"><label>① Invoice No</label><input id="gfe_inv_no" placeholder="entry.XXXXXXXXX" value="entry.711848445" oninput="checkGFConfig()"/></div>
         <div class="f"><label>② Invoice Date</label><input id="gfe_inv_date" placeholder="entry.XXXXXXXXX" value="entry.1141355359" oninput="checkGFConfig()"/></div>
         <div class="f"><label>③ Buyer Name</label><input id="gfe_b_name" placeholder="entry.XXXXXXXXX" value="entry.1518693747" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>④ Buyer GSTIN</label><input id="gfe_b_gstin" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>④ Buyer GSTIN</label><input id="gfe_b_gstin" placeholder="entry.XXXXXXXXX" value="entry.1178364128" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑤ Buyer Phone</label><input id="gfe_b_phone" placeholder="entry.XXXXXXXXX" value="entry.1979914834" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑥ Buyer Address</label><input id="gfe_b_addr" placeholder="entry.XXXXXXXXX" value="entry.245762926" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑦ Invoice Desc</label><input id="gfe_inv_desc" placeholder="entry.XXXXXXXXX" value="entry.2070361448" oninput="checkGFConfig()"/></div>
@@ -320,8 +320,8 @@ body{background:#e2e8f0;font-family:var(--font);min-height:100vh;padding:16px}
         <div class="f"><label>⑨ Taxable Amt</label><input id="gfe_taxable" placeholder="entry.XXXXXXXXX" value="entry.2088664193" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑩ Total GST</label><input id="gfe_gst" placeholder="entry.XXXXXXXXX" value="entry.482730463" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑪ Grand Total</label><input id="gfe_grand" placeholder="entry.XXXXXXXXX" value="entry.160476307" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑫ Ship To Name</label><input id="gfe_sh_name" placeholder="entry.XXXXXXXXX" oninput="checkGFConfig()"/></div>
-        <div class="f"><label>⑬ Ship Address</label><input id="gfe_sh_addr" placeholder="entry.XXXXXXXXX" value="entry.1791464602" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑫ Ship To Name</label><input id="gfe_sh_name" placeholder="entry.XXXXXXXXX" value="entry.1791464602" oninput="checkGFConfig()"/></div>
+        <div class="f"><label>⑬ Ship Address</label><input id="gfe_sh_addr" placeholder="entry.XXXXXXXXX" value="entry.371959909" oninput="checkGFConfig()"/></div>
         <div class="f"><label>⑭ Notes</label><input id="gfe_notes" placeholder="entry.XXXXXXXXX" value="entry.1206998346" oninput="checkGFConfig()"/></div>
       </div>
     </div>
@@ -540,9 +540,9 @@ function buildWM(name){
 
 // Field order must match your Google Form field order top-to-bottom
 const GF_FIELD_IDS = [
-  'gfe_inv_no','gfe_inv_date','gfe_b_name','gfe_b_phone',
+  'gfe_inv_no','gfe_inv_date','gfe_b_name','gfe_b_gstin','gfe_b_phone',
   'gfe_b_addr','gfe_inv_desc','gfe_items','gfe_taxable','gfe_gst',
-  'gfe_grand','gfe_sh_addr','gfe_notes'
+  'gfe_grand','gfe_sh_name','gfe_sh_addr','gfe_notes'
 ];
 
 // Hardcoded form URL — already known
@@ -630,6 +630,7 @@ var HARDCODED_ENTRY_IDS = {
   'gfe_inv_no':   'entry.711848445',
   'gfe_inv_date': 'entry.1141355359',
   'gfe_b_name':   'entry.1518693747',
+  'gfe_b_gstin':  'entry.1178364128',
   'gfe_b_phone':  'entry.1979914834',
   'gfe_b_addr':   'entry.245762926',
   'gfe_inv_desc': 'entry.2070361448',
@@ -637,7 +638,8 @@ var HARDCODED_ENTRY_IDS = {
   'gfe_taxable':  'entry.2088664193',
   'gfe_gst':      'entry.482730463',
   'gfe_grand':    'entry.160476307',
-  'gfe_sh_addr':  'entry.1791464602',
+  'gfe_sh_name':  'entry.1791464602',
+  'gfe_sh_addr':  'entry.371959909',
   'gfe_notes':    'entry.1206998346'
 };
 
@@ -668,12 +670,12 @@ function checkGFConfig(){
     var el = document.getElementById(id);
     return el && (el.value || '').trim().startsWith('entry.');
   });
-  if(configured.length >= 12){
+  if(configured.length >= 14){
     status.className = 'gf-status connected';
-    status.textContent = 'Ready — all 12 entry IDs loaded. Save & Download will record to Sheets.';
+    status.textContent = 'Ready — all 14 entry IDs loaded. Save & Download will record to Sheets.';
   } else if(configured.length > 0){
     status.className = 'gf-status disconnected';
-    status.textContent = 'Partial: only ' + configured.length + '/12 IDs set.';
+    status.textContent = 'Partial: only ' + configured.length + '/14 IDs set.';
   } else {
     status.className = 'gf-status disconnected';
     status.textContent = 'Not activated — paste your pre-filled URL above and click Extract.';
@@ -699,6 +701,7 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
     { id: HARDCODED_ENTRY_IDS['gfe_inv_no'],   val: V('inv_no') },
     { id: HARDCODED_ENTRY_IDS['gfe_inv_date'], val: V('inv_date') },
     { id: HARDCODED_ENTRY_IDS['gfe_b_name'],   val: V('b_name') },
+    { id: HARDCODED_ENTRY_IDS['gfe_b_gstin'],  val: V('b_gstin') },
     { id: HARDCODED_ENTRY_IDS['gfe_b_phone'],  val: V('b_phone') },
     { id: HARDCODED_ENTRY_IDS['gfe_b_addr'],   val: V('b_addr') },
     { id: HARDCODED_ENTRY_IDS['gfe_inv_desc'], val: V('inv_desc') },
@@ -706,6 +709,7 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
     { id: HARDCODED_ENTRY_IDS['gfe_taxable'],  val: sub.toFixed(2) },
     { id: HARDCODED_ENTRY_IDS['gfe_gst'],      val: totalGST.toFixed(2) },
     { id: HARDCODED_ENTRY_IDS['gfe_grand'],    val: String(Math.round(grand)) },
+    { id: HARDCODED_ENTRY_IDS['gfe_sh_name'],  val: V('sh_name') || V('b_name') },
     { id: HARDCODED_ENTRY_IDS['gfe_sh_addr'],  val: V('sh_addr') || V('b_addr') },
     { id: HARDCODED_ENTRY_IDS['gfe_notes'],    val: V('notes') },
   ];
