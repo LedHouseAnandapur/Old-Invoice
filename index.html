@@ -634,39 +634,42 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
   const formUrl = V('gf_url');
   if(!formUrl || !formUrl.includes('docs.google.com/forms')) return false;
 
-  // Build the items summary string for the form
   const itemsSummary = items.map(i =>
-    `${i.name} (x${i.qty}) @ ₹${i.rate.toFixed(0)} + ${i.gst}% GST = ₹${i.total.toFixed(0)}`
+    i.name + ' (x' + i.qty + ') @ Rs.' + i.rate.toFixed(0) + ' + ' + i.gst + '% GST = Rs.' + i.total.toFixed(0)
   ).join(' | ');
 
-  // Map form entry IDs to values
-  const fields = {
-    [V('gfe_inv_no')]:   V('inv_no'),
-    [V('gfe_inv_date')]: V('inv_date'),
-    [V('gfe_b_name')]:   V('b_name'),
-    [V('gfe_b_gstin')]:  V('b_gstin'),
-    [V('gfe_b_phone')]:  V('b_phone'),
-    [V('gfe_b_addr')]:   V('b_addr'),
-    [V('gfe_inv_desc')]: V('inv_desc'),
-    [V('gfe_items')]:    itemsSummary,
-    [V('gfe_taxable')]:  sub.toFixed(2),
-    [V('gfe_gst')]:      totalGST.toFixed(2),
-    [V('gfe_grand')]:    Math.round(grand).toString(),
-    [V('gfe_sh_name')]:  V('sh_name'),
-    [V('gfe_sh_addr')]:  V('sh_addr'),
-    [V('gfe_notes')]:    V('notes'),
-  };
+  // Array of pairs so entry IDs are read at submit time — NOT used as object keys
+  const pairs = [
+    { el:'gfe_inv_no',   val: V('inv_no') },
+    { el:'gfe_inv_date', val: V('inv_date') },
+    { el:'gfe_b_name',   val: V('b_name') },
+    { el:'gfe_b_gstin',  val: V('b_gstin') },
+    { el:'gfe_b_phone',  val: V('b_phone') },
+    { el:'gfe_b_addr',   val: V('b_addr') },
+    { el:'gfe_inv_desc', val: V('inv_desc') },
+    { el:'gfe_items',    val: itemsSummary },
+    { el:'gfe_taxable',  val: sub.toFixed(2) },
+    { el:'gfe_gst',      val: totalGST.toFixed(2) },
+    { el:'gfe_grand',    val: String(Math.round(grand)) },
+    { el:'gfe_sh_name',  val: V('sh_name') || V('b_name') },
+    { el:'gfe_sh_addr',  val: V('sh_addr') || V('b_addr') },
+    { el:'gfe_notes',    val: V('notes') },
+  ];
 
-  // Build form body — skip empty entry IDs
-  const body = Object.entries(fields)
-    .filter(([k]) => k && k.startsWith('entry.'))
-    .map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join('&');
+  // Count how many entry IDs are actually configured
+  const configured = pairs.filter(p => {
+    const id = (document.getElementById(p.el) || {}).value || '';
+    return id.trim().startsWith('entry.');
+  });
 
-  // Use a hidden iframe to POST silently (avoids CORS redirect issues)
+  console.log('[GForm] Configured entry IDs: ' + configured.length + '/14');
+
+  if(configured.length === 0){
+    return 'no_entry_ids';
+  }
+
   return new Promise((resolve) => {
     try {
-      // Create hidden iframe as POST target
       let iframe = document.getElementById('gf_iframe');
       if(!iframe){
         iframe = document.createElement('iframe');
@@ -676,29 +679,28 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
         document.body.appendChild(iframe);
       }
 
-      // Create a temp form and submit it
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = formUrl;
       form.target = 'gf_iframe';
       form.style.display = 'none';
 
-      Object.entries(fields)
-        .filter(([k]) => k && k.startsWith('entry.'))
-        .forEach(([k,v]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = k;
-          input.value = v;
-          form.appendChild(input);
-        });
+      pairs.forEach(function(p){
+        const entryId = ((document.getElementById(p.el) || {}).value || '').trim();
+        if(!entryId.startsWith('entry.')) return;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = entryId;
+        input.value = p.val;
+        form.appendChild(input);
+        console.log('  [GForm] ' + entryId + ' = "' + String(p.val).substring(0,50) + '"');
+      });
 
       document.body.appendChild(form);
       form.submit();
       document.body.removeChild(form);
 
-      // Google Form submit is fire-and-forget (CORS blocks response reading)
-      setTimeout(() => resolve(true), 800);
+      setTimeout(function(){ resolve(true); }, 1200);
     } catch(e){
       console.warn('Google Form submit error:', e);
       resolve(false);
@@ -707,9 +709,10 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
 }
 
 function showSaveModal(success, msg){
-  document.getElementById('modalIcon').textContent = success ? '✅' : '⚠️';
+  document.getElementById('modalIcon').textContent = success ? '✅' : '⚠';
   document.getElementById('modalTitle').textContent = success ? 'Saved to Google Sheets!' : 'Not Saved';
-  document.getElementById('modalMsg').textContent = msg;
+  // Render newlines as <br> for readability
+  document.getElementById('modalMsg').innerHTML = msg.replace(/\n/g, '<br/>');
   document.getElementById('saveModal').classList.add('show');
   document.getElementById('modalOverlay').classList.add('show');
 }
@@ -738,18 +741,31 @@ async function saveAndDownload(quality='normal'){
   }
 
   showToast('💾 Saving to Google Sheets…');
-  const saved = await submitToGoogleForm(items, sub, totalGST, grand);
+  const result = await submitToGoogleForm(items, sub, totalGST, grand);
   hideToast();
 
   // Download PDF regardless of save result
   await downloadPDF(quality);
 
-  showSaveModal(
-    saved,
-    saved
-      ? `Invoice ${V('inv_no')||'#'} for ${V('b_name')||'buyer'} has been recorded.\nPDF downloaded successfully.`
-      : 'Could not confirm save — check your Form URL and entry IDs. PDF downloaded anyway.'
-  );
+  if(result === 'no_entry_ids'){
+    showSaveModal(false,
+      'Entry IDs not set up yet!\n\n' +
+      'Your data was NOT saved. Here is how to fix it:\n\n' +
+      '1. Open your Google Form as editor\n' +
+      '2. Click the 3-dot menu then Get pre-filled link\n' +
+      '3. Type "test" in every field then click Get Link\n' +
+      '4. Copy the URL and paste it in the Show/hide entry field IDs panel\n' +
+      '5. Click Extract IDs then Save Entry IDs\n\n' +
+      'PDF was downloaded successfully.'
+    );
+  } else {
+    showSaveModal(
+      result === true,
+      result === true
+        ? 'Invoice ' + (V('inv_no')||'#') + ' for ' + (V('b_name')||'buyer') + ' saved to Google Sheets.\nPDF downloaded successfully.'
+        : 'Could not confirm save. Check your Form URL and entry IDs.\nPDF downloaded anyway.'
+    );
+  }
 }
 
 // ─── GENERATE ───
@@ -835,7 +851,7 @@ function generate(){
         <div class="co-gstin">GSTIN: ${V('s_gstin')||'–'}</div>
         <div class="co-contact">
           ${V('s_phone')?`📞 ${V('s_phone')}<br/>`:''}
-          ${V('s_email')?`✉️ ${V('s_email')}<br/>`:''}
+          ${V('s_email')?`✉ ${V('s_email')}<br/>`:''}
           ${sAddr?`📍 ${sAddr}`:''}
         </div>
       </div>
