@@ -688,38 +688,30 @@ function toggleGFFields(){
 }
 
 // Submit data to Google Form via hidden iframe
+// Entry IDs are taken directly from HARDCODED_ENTRY_IDS — no DOM dependency
 async function submitToGoogleForm(items, sub, totalGST, grand){
   var itemsSummary = items.map(function(i){
     return i.name + ' x' + i.qty + ' @Rs.' + i.rate.toFixed(0) + ' +' + i.gst + '%GST =Rs.' + i.total.toFixed(0);
   }).join(' | ');
 
-  // Build value map — 12 fields matching your Google Form exactly
-  var pairs = [
-    { el:'gfe_inv_no',   val: V('inv_no') },
-    { el:'gfe_inv_date', val: V('inv_date') },
-    { el:'gfe_b_name',   val: V('b_name') },
-    { el:'gfe_b_phone',  val: V('b_phone') },
-    { el:'gfe_b_addr',   val: V('b_addr') },
-    { el:'gfe_inv_desc', val: V('inv_desc') },
-    { el:'gfe_items',    val: itemsSummary },
-    { el:'gfe_taxable',  val: sub.toFixed(2) },
-    { el:'gfe_gst',      val: totalGST.toFixed(2) },
-    { el:'gfe_grand',    val: String(Math.round(grand)) },
-    { el:'gfe_sh_addr',  val: V('sh_addr') || V('b_addr') },
-    { el:'gfe_notes',    val: V('notes') },
+  // Map entry ID -> value directly using hardcoded IDs
+  var fieldMap = [
+    { id: HARDCODED_ENTRY_IDS['gfe_inv_no'],   val: V('inv_no') },
+    { id: HARDCODED_ENTRY_IDS['gfe_inv_date'], val: V('inv_date') },
+    { id: HARDCODED_ENTRY_IDS['gfe_b_name'],   val: V('b_name') },
+    { id: HARDCODED_ENTRY_IDS['gfe_b_phone'],  val: V('b_phone') },
+    { id: HARDCODED_ENTRY_IDS['gfe_b_addr'],   val: V('b_addr') },
+    { id: HARDCODED_ENTRY_IDS['gfe_inv_desc'], val: V('inv_desc') },
+    { id: HARDCODED_ENTRY_IDS['gfe_items'],    val: itemsSummary },
+    { id: HARDCODED_ENTRY_IDS['gfe_taxable'],  val: sub.toFixed(2) },
+    { id: HARDCODED_ENTRY_IDS['gfe_gst'],      val: totalGST.toFixed(2) },
+    { id: HARDCODED_ENTRY_IDS['gfe_grand'],    val: String(Math.round(grand)) },
+    { id: HARDCODED_ENTRY_IDS['gfe_sh_addr'],  val: V('sh_addr') || V('b_addr') },
+    { id: HARDCODED_ENTRY_IDS['gfe_notes'],    val: V('notes') },
   ];
 
-  // Count configured entry IDs
-  var configured = pairs.filter(function(p){
-    var el = document.getElementById(p.el);
-    return el && (el.value || '').trim().startsWith('entry.');
-  });
-
-  console.log('[GForm] Submitting ' + configured.length + '/12 fields');
-
-  if(configured.length === 0){
-    return 'no_entry_ids';
-  }
+  console.log('[GForm] Submitting to ' + GF_FORM_URL);
+  fieldMap.forEach(function(f){ console.log('  ' + f.id + ' = ' + String(f.val).substring(0,40)); });
 
   return new Promise(function(resolve){
     try {
@@ -738,15 +730,12 @@ async function submitToGoogleForm(items, sub, totalGST, grand){
       form.target = 'gf_iframe';
       form.style.display = 'none';
 
-      pairs.forEach(function(p){
-        var entryId = ((document.getElementById(p.el) || {}).value || '').trim();
-        if(!entryId.startsWith('entry.')) return;
+      fieldMap.forEach(function(f){
         var input = document.createElement('input');
         input.type = 'hidden';
-        input.name = entryId;
-        input.value = p.val;
+        input.name = f.id;
+        input.value = f.val;
         form.appendChild(input);
-        console.log('  ' + entryId + ' = "' + String(p.val).substring(0,40) + '"');
       });
 
       document.body.appendChild(form);
@@ -789,23 +778,12 @@ async function saveAndDownload(quality){
 
   await downloadPDF(quality);
 
-  if(result === 'no_entry_ids'){
-    showSaveModal(false,
-      'Entry IDs not set up!\n\n' +
-      'Go to your Google Form editor, click the 3-dot menu,\n' +
-      'choose "Get pre-filled link", fill every field, click\n' +
-      '"Get Link", copy that URL, and paste it in the\n' +
-      'integration panel at the top of this form.\n\n' +
-      'PDF was downloaded anyway.'
-    );
-  } else {
-    showSaveModal(
-      result === true,
-      result === true
-        ? 'Invoice ' + (V('inv_no') || '#') + ' saved to Google Sheets.\nPDF downloaded successfully.'
-        : 'Could not confirm save. Check browser console for details.\nPDF downloaded anyway.'
-    );
-  }
+  showSaveModal(
+    result === true,
+    result === true
+      ? 'Invoice ' + (V('inv_no') || '#') + ' for ' + (V('b_name') || 'buyer') + ' saved to Google Sheets!\nPDF downloaded successfully.'
+      : 'Submit may have failed. Check your internet connection.\nPDF downloaded anyway.'
+  );
 }
 
 // ─── GENERATE ───
